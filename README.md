@@ -9,17 +9,17 @@ Authors: [David S. Li](https://scholar.google.com/citations?user=5mNu_m4AAAAJ&hl
 
 # Cases and Architectures
 
-The repository contains 16 cases analyzing different architectures and information available to the network. The following list provides a key to access each of tehse experiments. 
+The repository contains 16 cases analyzing different architectures and information available to the network. The following list provides the key to identifying each of the manuscript's experiments. 
 ## Cases
 | Case | Training Data | Format |
 |------|--------------|---------|
-| Case 1 | Dilatation only | Heat maps |
-| Case 2 | Dilatation & distensibility | Heat maps |
-| Case 3 | Dilatation only | Grayscale maps |
+| Case 1 | Dilatation only | Grayscale maps |
+| Case 2 | Dilatation only | Heat maps |
+| Case 3 | Dilatation & distensibility | Heat maps |
 | Case 4 | Dilatation & distensibility | Grayscale maps |
 
 ## Network Architectures
-- Network A: LNO
-- Network B: CNN-based DeepONet
-- Network C: FNN-based DeepONet
-- Network D: UNet
+- Network A: CNN-based DeepONet
+- Network B: FNN-based DeepONet
+- Network C: UNet
+- Network D: LNO
