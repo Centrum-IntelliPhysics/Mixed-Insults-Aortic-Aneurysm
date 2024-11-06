@@ -16,9 +16,9 @@ from torchinfo import summary
 torch.manual_seed(123)
 np.random.seed(123)
 
-# ====================================
+# ===================================
 # saving settings
-# ====================================
+# ===================================
 current_directory = os.getcwd()
 case = "Heatmap"
 save_index = 1  
