@@ -15,8 +15,8 @@ The repository contains 16 cases analyzing different architectures and informati
 |------|--------------|---------|
 | Case 1 | Dilatation only | Grayscale maps |
 | Case 2 | Dilatation only | Heat maps |
-| Case 3 | Dilatation & distensibility | Heat maps |
-| Case 4 | Dilatation & distensibility | Grayscale maps |
+| Case 3 | Dilatation & distensibility | Grayscale maps |
+| Case 4 | Dilatation & distensibility | Heat maps |
 
 ## Network Architectures
 - Network A: CNN-based DeepONet
