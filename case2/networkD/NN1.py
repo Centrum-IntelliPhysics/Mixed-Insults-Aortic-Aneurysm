@@ -41,7 +41,7 @@ class PR2d(nn.Module):
 
     def forward(self, x):
         theta=torch.linspace(0, 2*np.pi, 41, dtype=torch.float32)
-        z = torch.linspace(0, 15, 40, dtype=torch.float32)
+        z = torch.linspace(0, 15, 41, dtype=torch.float32)
         tx=theta.reshape(1,-1).cuda()
         ty=z.reshape(1,-1).cuda()
         #Compute input poles and resudes by FFT

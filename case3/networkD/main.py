@@ -40,13 +40,13 @@ batch_size_vali = 20
 
 learning_rate = 0.001
 
-epochs = 5000
+epochs = 10000
 
 modes1 = 8  
 modes2 = 8   
 width = 32
 
-reader = MatReader('Data/mixed_data_grey.mat')
+reader = MatReader('Data/mixed_data_grey_pad.mat')
 F1_train = reader.read_field('F1_train')
 F2_train = reader.read_field('F2_train')
 U1_train = reader.read_field('U1_train')
@@ -57,7 +57,7 @@ U1_test = reader.read_field('U1_test')
 U2_test = reader.read_field('U2_test')
 
 theta_ori = np.linspace(0, 1, 41)
-z_ori = np.linspace(0, 1, 40)
+z_ori = np.linspace(0, 1, 41)
 
 
 F1_train = F1_train.reshape(F1_train.shape[0], F1_train.shape[1], F1_train.shape[2], 1)
