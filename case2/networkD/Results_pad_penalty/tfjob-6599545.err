@@ -1,0 +1,3 @@
+/var/spool/slurmd/job6599545/slurm_script: line 14: /users/qcao12/scratch/torch_cuda/bin/activate: No such file or directory
+/oscar/data/gk/qcao12/4Humphery/Project5_mixed_insult/new_data/heatmap/LNO_dilatationonly_pad_penalty/NN1.py:66: UserWarning: Failed to write temporarily kernel cache file! File path was /users/qcao12/.cache/torch/kernels/exp_kernel_vectorized4_arch9.0_nvrtc11.8_sass_45424_8e6cace7dd315288f2a86ba4a76a8d1576c39afa_tmp_1534853. This warning will only appear once per process. (Triggered internally at /opt/conda/conda-bld/pytorch_1720538439764/work/aten/src/ATen/native/cuda/jit_utils.cpp:1620.)
+  term3=torch.einsum("bipz,biqx->bipqzx", torch.exp(term1),torch.exp(term2))
