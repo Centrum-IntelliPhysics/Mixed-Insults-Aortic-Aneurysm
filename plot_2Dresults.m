@@ -1,27 +1,39 @@
 
 % David Li    Yale University    2024
 
-% Requires colormaps folder and tight_subplot.m
+% Requires results .mats (e.g., case1_results.mat) generated from data_preproc.m.
+% Requires colormaps/ folder and tight_subplot.m.
 
 clear; clc; close all;
 addpath('colormaps');
+set(0, 'DefaultAxesTickDir', 'in'); set(0, 'DefaultAxesTickDirMode', 'manual');
 
-pcolplot = 1;				% 0 or 1		Plot pcolor maps
-pcolsave = 0;				% 0 or 1		Save pcolor maps
+%% Set options
+paddata   = 1;				% 0 or 1		Use padded data?
+fliptheta = 1;				% 0 or 1		Load reordered theta results?
+pcolplot  = 1;				% 0 or 1		Plot pcolor maps
+pcolsave  = 0;				% 0 or 1		Save pcolor maps
 
 casenum = 'case2';			% case1-4		Which data format/maps
 cn = str2double(casenum(end));
 
-load([casenum, '_results.mat']);
-% load([casenum, '_results_noflip.mat']);
+%% Load results
+if paddata; suffix = '_pad_penalty'; else; suffix = []; end
+
+if fliptheta; load(['allResults', suffix, '/', casenum, '_results.mat']);			% With theta reordering
+else; load(['allResults', suffix, '/', casenum, '_results_noflip.mat']); end		% Without theta reordering
 
 % Define testing realizations
-realizations = 38;		% [5 10 16 34 38 44] [2 4 13 14 24 29 31 32 33 34 38 40 43 44]
+realizations = 38;
+% Pad data									No pad
+%  EF domi: (2 LNO bad) (34 mild) 38		12 17 38
+%  MS domi: 4 13 44							1 14 28 37 45
+%  Balance: 10 15 16						13 31
 
-% Create figures
+%% Create figures
 N = 4;
 if pcolplot && ~ishandle(1)
-	if cn==4; figure('name', 'Training data'); set(gcf, 'units', 'normalized', 'outerposition', [.10 .40 .20 .60]);
+	if cn==4; figure('name', 'Training data'); set(gcf, 'units', 'normalized', 'outerposition', [.10 .40 .18 .60]);
 		f1 = tight_subplot(N, 2, [.06 .20], [.05 .02], [.05 .20]);
 	else; figure('name', 'Training data'); set(gcf, 'units', 'normalized', 'outerposition', [.10 .40 .17 .60]);
 		f1 = tight_subplot(N, 2, [.06 .07], [.05 .02], [.10 .25]);
@@ -38,7 +50,8 @@ end
 
 r = realizations;
 
-for nettype = {'networkA', 'networkB', 'networkD'}%, 'networkC'}
+% Loop over all networks
+for nettype = {'networkA', 'networkB', 'networkC', 'networkD'}%
 	if contains(nettype, 'A');		c = 1;
 	elseif contains(nettype, 'B');	c = 2;
 	elseif contains(nettype, 'C');	c = 3;
@@ -102,31 +115,32 @@ for nettype = {'networkA', 'networkB', 'networkD'}%, 'networkC'}
 	
 	if pcolplot
 	
-	% Plot dilatation and/or distensibility
+	% Dilatation and/or distensibility
 	axes(f1(2*(c-1)+1)); % subplot(10,2,2*(r-1)+1);
 		pcolor(T_in, Z_in, dil_in); xlim([-pi pi]);
 		if mod(cn, 2)==0; caxis([1 1.5]); else; caxis([0 255]); end
 		if cn==4; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.7e-1 0 1.8e-2 0];
 		elseif cn==3; shading flat;
-		else; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [2.2e-1 0 1.8e-2 0]; end
+		else; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [2.2e-1 0 1.8e-2 0];
+		end
 		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
 % 		if r==1; title('Dilatation'); end
 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
 	axes(f1(2*c)); % subplot(10,2,2*r);
-		if ~exist('distensibility', 'var')
-			axis off;
+		if cn < 3; axis off;
 		else
 			pcolor(T_in, Z_in, dis_in); xlim([-pi pi]);
 			if mod(cn, 2)==0; caxis([.03 .07]); else; caxis([0 255]); end
-			if cn==4; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.7e-1 0 1.8e-2 0];
-			else; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [2.2e-1 0 1.8e-2 0]; end
+			if cn==4; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.7e-1 0 1.5e-2 0];
+			else; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [2.2e-1 0 1.8e-2 0];
+			end
 			xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
 	% 		if r==1; title('Distensibility'); end
 			set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
 		end
 	if mod(cn, 2)==0; colormap(jet); else; colormap(gray); end
 	
-	% Plot elastic fiber insult
+	% True and predicted elastic fiber insult
 	axes(f2(2*(c-1)+1)); % subplot(10,2,2*(r-1)+1);
 		pcolor(T_in, Z_in, true_ce_in); xlim([-pi pi])
 		caxis([0 .48]);
@@ -143,7 +157,7 @@ for nettype = {'networkA', 'networkB', 'networkD'}%, 'networkC'}
 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
 	colormap(plasma);
 
-	% Plot mechanosensing insult
+	% True and predicted mechanosensing insult
 	axes(f3(2*(c-1)+1)); % subplot(10,2,2*(r-1)+1);
 		pcolor(T_in, Z_in, true_ms_in); xlim([-pi pi]);
 		caxis([0 .28]);
@@ -160,13 +174,13 @@ for nettype = {'networkA', 'networkB', 'networkD'}%, 'networkC'}
 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
 	colormap(viridis);
 
-	% Plot elastic fiber & mechanosensing (absolute) errors
+	% (Absolute) errors for elastic fiber & mechanosensing
 	axes(f4(c)); % axes(f4(2*(c-1)+1)); subplot(10,2,2*(r-1)+1);
 		pcolor(T_in, Z_in, pred_ce_in-true_ce_in); xlim([-pi pi]);
 % 		if cs < 3; caxis([-.025 .025]); else; caxis([-.1 .1]); end
 		caxis([-.10 .10]);
 % 		caxis(max(max(abs(caxis)))*[-1 1]);
-		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0];
+		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0]; cb.Ruler.TickLabelFormat = '%.2f';
 		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
 % 		if r==1; title('Eln fiber error'); end
 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
@@ -176,17 +190,40 @@ for nettype = {'networkA', 'networkB', 'networkD'}%, 'networkC'}
 % 		if cs < 3; caxis([-.025 .025]); else; caxis([-.1 .1]); end
 		caxis([-.10 .10]);
 % 		caxis(max(max(abs(caxis)))*[-1 1]);
-		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0];
+		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0]; cb.Ruler.TickLabelFormat = '%.2f';
 		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
 % 		if r==1; title('Mechanosensing error'); end
 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
 	colormap(bwr);
+	
+% 	% (Relative) errors for elastic fiber & mechanosensing (normalized wrt max insult)
+% 	axes(f4(c)); % axes(f4(2*(c-1)+1)); subplot(10,2,2*(r-1)+1);
+% 		pcolor(T_in, Z_in, (pred_ce_in-true_ce_in)/max(max(true_ce_in))); xlim([-pi pi]);
+% % 		if cs < 3; caxis([-.025 .025]); else; caxis([-.1 .1]); end
+% 		caxis([-.50 .50]);
+% % 		caxis(max(max(abs(caxis)))*[-1 1]);
+% 		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0]; cb.Ruler.TickLabelFormat = '%.2f';
+% 		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
+% % 		if r==1; title('Eln fiber error'); end
+% 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
+% 	colormap(bwr);
+% 	axes(f5(c)); % axes(f4(2*c)); % subplot(10,2,2*r);
+% 		pcolor(T_in, Z_in, (pred_ms_in-true_ms_in)/max(max(true_ms_in))); xlim([-pi pi]);
+% % 		if cs < 3; caxis([-.025 .025]); else; caxis([-.1 .1]); end
+% 		caxis([-.50 .50]);
+% % 		caxis(max(max(abs(caxis)))*[-1 1]);
+% 		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0]; cb.Ruler.TickLabelFormat = '%.2f';
+% 		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
+% % 		if r==1; title('Mechanosensing error'); end
+% 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
+% 	colormap(bwr);
 	
 	end
 	
 	c = c+1;
 end
 
+%% Save plots
 if pcolsave
 	if ~exist('plots', 'dir'); mkdir('plots'); end
 	figure(1); print(gcf, ['plots/',casenum,'_',num2str(realizations),'_1-testing.png'], '-dpng', '-r300');
@@ -195,57 +232,3 @@ if pcolsave
 	figure(3); print(gcf, ['plots/',casenum,'_',num2str(realizations),'_4-MS-pred.png'], '-dpng', '-r300');
 	figure(5); print(gcf, ['plots/',casenum,'_',num2str(realizations),'_5-MS-error.png'], '-dpng', '-r300');
 end
-
-% figure; set(gcf, 'units', 'normalized', 'outerposition', [.10 .10 .80 .40]);
-% subplot(211);
-% 	violinplot(err_ce_networkA_allcases(1:20,1:4));
-% % 	xlim([0 51]); box off;
-% 	title('Elastic fiber integrity error');
-% 	set(gca, 'tickdir', 'out', 'ticklength', 'default');
-% subplot(212);
-% 	violinplot((target_mech-pred_mech)');
-% 	xlim([0 51]); box off;
-% 	title('Mechanosensing error');
-% 	set(gca, 'tickdir', 'out', 'ticklength', 'default');
-
-% maptype = 'heat_';			% heat_ or grey_	Heat map or greycale map
-% arch    = 'oldArch_';			% oldArch_			(Used to have newArch_ option)
-% train   = 'dil_';				% dil_ or dil_dis_	Dilatation only or dilatation & distensibility
-% cnn     = '_CNN';				% _CNN or []		CNN or FNN branches
-% path    = [maptype, arch, train, 'EF_mech', cnn, '\Results\seed=0\'];
-
-
-% 	% networkA & B
-% 	t_re       = reshape(init_loc_cyl(:,1),   2*nz+1, 2*nt);					% Theta coordinates (circ.)
-% 	z_re       = reshape(init_loc_cyl(:,3),   2*nz+1, 2*nt);					% Z coordinates (axial)
-% 	dil_re     = reshape(dilatation(r,:),     2*nt, 2*nz+1)';					% Dilatation
-% 	if exist('distensibility', 'var')
-% 		dis_re     = reshape(distensibility(r,:), 2*nt, 2*nz+1)';				% Distensibility
-% 	else
-% 		dis_re = nan(2*nt, 2*nz+1)';											% (Set distensibility to NaN for dilatation only case)
-% 	end
-% 	true_ce_re = reshape(target_ef(r,:),      2*nt, 2*nz+1)';					% Elastic fiber integrity insult, true
-% 	true_ms_re = reshape(target_mech(r,:),    2*nt, 2*nz+1)';					% Mechanosensing insult, true
-% 	pred_ce_re = reshape(pred_ef(r,:),        2*nt, 2*nz+1)';					% Elastic fiber integrity insult, predicted
-% 	pred_ms_re = reshape(pred_mech(r,:),      2*nt, 2*nz+1)';					% Mechanosensing insult, predicted
-% 
-% 	% Reorder rows based on ascending theta coordinate
-% 	[~, tmin] = min(t_re(1, :));
-% 	t_re       = fliplr([t_re(:, tmin+1:end) t_re(:, 1:tmin)]);
-% 	z_re       = fliplr([z_re(:, tmin+1:end) z_re(:, 1:tmin)]);
-% 	dil_re     = fliplr([dil_re(:, tmin+1:end) dil_re(:, 1:tmin)]);
-% 	dis_re     = fliplr([dis_re(:, tmin+1:end) dis_re(:, 1:tmin)]);
-% 	true_ce_re = fliplr([true_ce_re(:, tmin+1:end) true_ce_re(:, 1:tmin)]);
-% 	true_ms_re = fliplr([true_ms_re(:, tmin+1:end) true_ms_re(:, 1:tmin)]);
-% 	pred_ce_re = fliplr([pred_ce_re(:, tmin+1:end) pred_ce_re(:, 1:tmin)]);
-% 	pred_ms_re = fliplr([pred_ms_re(:, tmin+1:end) pred_ms_re(:, 1:tmin)]);
-% 
-% 	% Append last column to front
-% 	t_re       = horzcat(-pi*ones(2*nz+1,1), t_re);
-% 	z_re       = horzcat(z_re(:,end), z_re);
-% 	dil_re     = horzcat(dil_re(:,end), dil_re);
-% 	dis_re     = horzcat(dis_re(:,end), dis_re);
-% 	true_ce_re = horzcat(true_ce_re(:,end), true_ce_re);
-% 	true_ms_re = horzcat(true_ms_re(:,end), true_ms_re);
-% 	pred_ce_re = horzcat(pred_ce_re(:,end), pred_ce_re);
-% 	pred_ms_re = horzcat(pred_ms_re(:,end), pred_ms_re);
