@@ -1,19 +1,53 @@
 
-% David Li    Yale University    2024
+% Importance of localized dilatation and distensibility in identifying
+% thoracic aortic aneurysm contributors with neural operators
+%
+% Authors: David S. Li, Somdatta Goswami, Qianying Cao, Vivek Oommen,
+%          Roland Assi, George Em Karniadakis, Jay D. Humphrey
+% Yale University, Brown University
+% 
+% Last updated Aug 2025
+
+% data_preproc.m
+% This script preprocesses the input data for training the networks. The
+% user sets the case number, signifying data type:
+% 'case1'		Dilatation only					Grayscale maps
+% 'case2'		Dilatation only					Heat maps
+% 'case3'		Dilatation & distensibility		Grayscale maps
+% 'case4'		Dilatation & distensibility		Heat maps
+
+% The output contains the testing results (dimensions of 50 testing cases,
+% 40-41 positions in the circumferential and axial directions) for all
+% network architectures:
+% Network A		CNN-based DeepONet
+% Network B		FNN-based DeepONet
+% Network C		UNet
+% Network D		LNO
+
+% After generating, the user saves the workspace in the corresponding
+% allResults folder (with the correct suffix).
+
+% Glossary:
+% true			ground truth insult profile
+% pred			predicted insult profile
+% ce			elastic fiber integrity
+% ms			mechanosensing
+% dil			dilatation
+% dis			distensibility
 
 clear; clc; close all;
 
 %% Set options
 paddata   = 1;				% 0 or 1		Assemble results with padded column?
 fliptheta = 0;				% 0 or 1		Reorder maps by ascending theta? Can reveal periodicity issues
-casenum = 'case4';			% case1-4		Which data format/maps
+casenum = 'case1';			% case1-4		Which data format/maps
 
 %% Prepare coordinates and testing data
 nt = 20; nz = 20;			% Mesh size (# 27-node hex elements)
-if paddata; suffix = '_pad_penalty'; else; suffix = []; end
+if paddata; suffix = '_pad'; else; suffix = []; end
 
 % Coordinates
-load(['data/new_delta=0000_pad.mat'], 'init_loc_cyl');
+load('data/new_delta=0000_pad.mat', 'init_loc_cyl');
 % load(['data/new_delta=0000',suffix,'.mat'], 'init_loc_cyl');
 T = init_loc_cyl(:,1);		% Theta (circ.)
 Z = init_loc_cyl(:,3);		% Z (axial)

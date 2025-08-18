@@ -1,58 +1,85 @@
 
-% David Li    Yale University    2024
+% Importance of localized dilatation and distensibility in identifying
+% thoracic aortic aneurysm contributors with neural operators
+%
+% Authors: David S. Li, Somdatta Goswami, Qianying Cao, Vivek Oommen,
+%          Roland Assi, George Em Karniadakis, Jay D. Humphrey
+% Yale University, Brown University
+% 
+% Last updated Aug 2025
 
+% plot_2Dresults.m
 % Requires results .mats (e.g., case1_results.mat) generated from data_preproc.m.
-% Requires colormaps/ folder and tight_subplot.m.
+% Requires colormaps/ export_fig/ folders as well as subroutines
+% threshfilter.m and tight_subplot.m.
+
+% This script generates 2D colormap plots of network predictions:
+% 'case1'		Dilatation only					Grayscale maps
+% 'case2'		Dilatation only					Heat maps
+% 'case3'		Dilatation & distensibility		Grayscale maps
+% 'case4'		Dilatation & distensibility		Heat maps
+% Network A		CNN-based DeepONet
+% Network B		FNN-based DeepONet
+% Network C		UNet
+% Network D		LNO
+
+% Generates 3 plots:
+%
+% Figure 1
+%	1st column: Input data.
+%	2nd column: Ground truth elastic fiber integrity (top, plasma) and
+%	mechanosensing (bottom, viridis) combined insult.
+% Figure 2
+%	Elastic fiber integrity predictions (top, plasma) and absolute errors
+%	(bottom, rwb), with each column corresponding to each network.
+% Figure 3
+%	Mechanosensing predictions (top, plasma) and absolute errors (bottom,
+%	rwb), with each column corresponding to each network.
 
 clear; clc; close all;
-addpath('colormaps');
+addpath colormaps export_fig;
 set(0, 'DefaultAxesTickDir', 'in'); set(0, 'DefaultAxesTickDirMode', 'manual');
 
 %% Set options
 paddata   = 1;				% 0 or 1		Use padded data?
-fliptheta = 1;				% 0 or 1		Load reordered theta results?
-pcolplot  = 1;				% 0 or 1		Plot pcolor maps
-pcolsave  = 0;				% 0 or 1		Save pcolor maps
+fliptheta = 0;				% 0 or 1		Load reordered theta results?
+filterins = 0;				% 0 or 1		Filter insult magnitudes?
+pcolplot  = 1;				% 0 or 1		Plot pcolor maps?
+pcolsave  = 0;				% 0 or 1		Save pcolor maps?
 
-casenum = 'case2';			% case1-4		Which data format/maps
+casenum = 'case1';			% case1-4		Which data format/maps
 cn = str2double(casenum(end));
 
 %% Load results
-if paddata; suffix = '_pad_penalty'; else; suffix = []; end
+if paddata; suffix = '_pad'; else; suffix = []; end
 
 if fliptheta; load(['allResults', suffix, '/', casenum, '_results.mat']);			% With theta reordering
 else; load(['allResults', suffix, '/', casenum, '_results_noflip.mat']); end		% Without theta reordering
 
-% Define testing realizations
-realizations = 38;
+% Define testing realization number(s)
+realizations = 15;
 % Pad data									No pad
 %  EF domi: (2 LNO bad) (34 mild) 38		12 17 38
 %  MS domi: 4 13 44							1 14 28 37 45
 %  Balance: 10 15 16						13 31
 
 %% Create figures
+% tight_subplot(Nh, Nw, [gap_h gap_w], marg_h, marg_w)
 N = 4;
 if pcolplot && ~ishandle(1)
-	if cn==4; figure('name', 'Training data'); set(gcf, 'units', 'normalized', 'outerposition', [.10 .40 .18 .60]);
-		f1 = tight_subplot(N, 2, [.06 .20], [.05 .02], [.05 .20]);
-	else; figure('name', 'Training data'); set(gcf, 'units', 'normalized', 'outerposition', [.10 .40 .17 .60]);
-		f1 = tight_subplot(N, 2, [.06 .07], [.05 .02], [.10 .25]);
-	end
-	figure('name', 'Eln fiber insult'); set(gcf, 'units', 'normalized', 'outerposition', [.33 .40 .17 .60]);
-		f2 = tight_subplot(N, 2, [.06 .07], [.05 .02], [.10 .25]);
-	figure('name', 'Mechanosensing insult'); set(gcf, 'units', 'normalized', 'outerposition', [.63 .40 .17 .60]);
-		f3 = tight_subplot(N, 2, [.06 .07], [.05 .02], [.10 .25]);
-	figure('name', 'Eln fiber absolute error'); set(gcf, 'units', 'normalized', 'outerposition', [.50 .40 .10 .60]);
-		f4 = tight_subplot(N, 1, [.06 .07], [.05 .02], [.00 .30]);
-	figure('name', 'Mechanosensing absolute error'); set(gcf, 'units', 'normalized', 'outerposition', [.80 .40 .10 .60]);
-		f5 = tight_subplot(N, 1, [.06 .07], [.05 .02], [.00 .30]);
+	figure('name', 'Training data'); set(gcf, 'units', 'normalized', 'outerposition', [.00 .59 .20 .35]);
+		f1 = tight_subplot(2, 2, [.06 .12], [.05 .05], [.01 .13]);
+	figure('name', 'Eln fiber insult'); set(gcf, 'units', 'normalized', 'outerposition', [.50 .67 .25 .33]);
+		f2 = tight_subplot(2, N, [.06 .01], [.05 .05], [.02 .11]);
+	figure('name', 'Mechanosensing insult'); set(gcf, 'units', 'normalized', 'outerposition', [.50 .34 .25 .33]);
+		f3 = tight_subplot(2, N, [.06 .01], [.05 .05], [.02 .11]);
 end
 
 r = realizations;
 
 % Loop over all networks
-for nettype = {'networkA', 'networkB', 'networkC', 'networkD'}%
-	if contains(nettype, 'A');		c = 1;
+for nettype = {'networkA', 'networkB', 'networkC', 'networkD'} %{'networkA', 'networkB', 'networkC', 'networkD'} {'networkC'}
+	if	   contains(nettype, 'A');	c = 1;
 	elseif contains(nettype, 'B');	c = 2;
 	elseif contains(nettype, 'C');	c = 3;
 	elseif contains(nettype, 'D');	c = 4;
@@ -113,111 +140,80 @@ for nettype = {'networkA', 'networkB', 'networkC', 'networkD'}%
 		end
 	end
 	
+	% Create logical mask of all regions where normalized insults is above
+	% specified threshold
+	if filterins
+		thres = 0.5;
+		ce_norm = true_ce_in./max(true_ce_in(:));   ms_norm = true_ms_in./max(true_ms_in(:));
+
+		ins_mask = ce_norm >= thres & ms_norm >= thres;
+		true_ce_in(~ins_mask) = NaN;    pred_ce_in(~ins_mask) = NaN;
+		true_ms_in(~ins_mask) = NaN;    pred_ms_in(~ins_mask) = NaN;
+
+	else
+		ins_mask = ones(size(true_ce_in));
+
+	end
+
 	if pcolplot
 	
 	% Dilatation and/or distensibility
-	axes(f1(2*(c-1)+1)); % subplot(10,2,2*(r-1)+1);
-		pcolor(T_in, Z_in, dil_in); xlim([-pi pi]);
-		if mod(cn, 2)==0; caxis([1 1.5]); else; caxis([0 255]); end
-		if cn==4; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.7e-1 0 1.8e-2 0];
-		elseif cn==3; shading flat;
-		else; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [2.2e-1 0 1.8e-2 0];
-		end
-		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% 		if r==1; title('Dilatation'); end
-		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-	axes(f1(2*c)); % subplot(10,2,2*r);
+	axes(f1(1));
+		pcolor(T_in, Z_in, dil_in); shading flat;
+		cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.1e-1 0 -1e-4 0];
+		if mod(cn, 2)==0; caxis([1 1.5]); else; caxis([0 255]); cb.Ticks = [0 255]; end
+		set(gca, 'layer', 'top', 'fontsize', 12, 'linewidth', 1, 'XTick', [], 'YTick', []); pbaspect([1 1.25 1]);
+	axes(f1(3));
 		if cn < 3; axis off;
 		else
-			pcolor(T_in, Z_in, dis_in); xlim([-pi pi]);
-			if mod(cn, 2)==0; caxis([.03 .07]); else; caxis([0 255]); end
-			if cn==4; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.7e-1 0 1.5e-2 0];
-			else; shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [2.2e-1 0 1.8e-2 0];
-			end
-			xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-	% 		if r==1; title('Distensibility'); end
-			set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
+			pcolor(T_in, Z_in, dis_in); shading flat;
+			cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.1e-1 0 -1e-4 0];
+			if mod(cn, 2)==0; caxis([.03 .07]); else; caxis([0 255]); cb.Ticks = [0 255]; end
+			set(gca, 'layer', 'top', 'fontsize', 12, 'linewidth', 1, 'XTick', [], 'YTick', []); pbaspect([1 1.25 1]);
 		end
 	if mod(cn, 2)==0; colormap(jet); else; colormap(gray); end
 	
 	% True and predicted elastic fiber insult
-	axes(f2(2*(c-1)+1)); % subplot(10,2,2*(r-1)+1);
-		pcolor(T_in, Z_in, true_ce_in); xlim([-pi pi])
+	axes(f1(2));
+		pcolor(T_in, Z_in, true_ce_in); shading flat;
 		caxis([0 .48]);
-		shading flat; % colorbar('linewidth', 1);
-		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% 		if r==1; title('True eln fiber'); end
-		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-	axes(f2(2*c)); % subplot(10,2,2*r);
-		pcolor(T_in, Z_in, pred_ce_in); xlim([-pi pi]);
+		cb = colorbar('linewidth', 1); cb.Ticks = [0 .2 .4]; cb.Position = cb.Position + [1.1e-1 0 -1e-4 0];
+		set(gca, 'layer', 'top', 'fontsize', 12, 'linewidth', 1, 'XTick', [], 'YTick', []); pbaspect([1 1.25 1]);
+		colormap(f1(2),plasma);
+	axes(f2(c));
+		pcolor(T_in, Z_in, pred_ce_in); shading flat;
 		caxis([0 .48]);
-		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [2.2e-1 0 1.8e-2 0];
-		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% 		if r==1; title('Predicted eln fiber'); end
-		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-	colormap(plasma);
+		if c==4; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.1e-1 0 1e-2 0]; end
+		set(gca, 'layer', 'top', 'fontsize', 12, 'linewidth', 1, 'XTick', [], 'YTick', []); pbaspect([1 1.25 1]);
+	    colormap(f2(c),plasma);
 
 	% True and predicted mechanosensing insult
-	axes(f3(2*(c-1)+1)); % subplot(10,2,2*(r-1)+1);
-		pcolor(T_in, Z_in, true_ms_in); xlim([-pi pi]);
+	axes(f1(4));
+		pcolor(T_in, Z_in, true_ms_in); shading flat;
 		caxis([0 .28]);
-		shading flat; % colorbar('linewidth', 1);
-		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% 		if r==1; title('True mechanosensing'); end
-		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-	axes(f3(2*c)); % subplot(10,2,2*r);
-		pcolor(T_in, Z_in, pred_ms_in); xlim([-pi pi]);
+		cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.1e-1 0 -1e-4 0];
+		set(gca, 'layer', 'top', 'fontsize', 12, 'linewidth', 1, 'XTick', [], 'YTick', []); pbaspect([1 1.25 1]);
+		colormap(f1(4),viridis);
+	axes(f3(c));
+		pcolor(T_in, Z_in, pred_ms_in); shading flat;
 		caxis([0 .28]);
-		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [2.2e-1 0 1.8e-2 0];
-		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% 		if r==1; title('Predicted mechanosensing'); end
-		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-	colormap(viridis);
-
+		if c==4; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.1e-1 0 1e-2 0]; end
+		set(gca, 'layer', 'top', 'fontsize', 12, 'linewidth', 1, 'XTick', [], 'YTick', []); pbaspect([1 1.25 1]);
+	    colormap(f3(c),viridis);
+	
 	% (Absolute) errors for elastic fiber & mechanosensing
-	axes(f4(c)); % axes(f4(2*(c-1)+1)); subplot(10,2,2*(r-1)+1);
-		pcolor(T_in, Z_in, pred_ce_in-true_ce_in); xlim([-pi pi]);
-% 		if cs < 3; caxis([-.025 .025]); else; caxis([-.1 .1]); end
+	axes(f2(c+N));
+		pcolor(T_in, Z_in, pred_ce_in-true_ce_in); shading flat;
 		caxis([-.10 .10]);
-% 		caxis(max(max(abs(caxis)))*[-1 1]);
-		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0]; cb.Ruler.TickLabelFormat = '%.2f';
-		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% 		if r==1; title('Eln fiber error'); end
-		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-	colormap(bwr);
-	axes(f5(c)); % axes(f4(2*c)); % subplot(10,2,2*r);
-		pcolor(T_in, Z_in, pred_ms_in-true_ms_in); xlim([-pi pi]);
-% 		if cs < 3; caxis([-.025 .025]); else; caxis([-.1 .1]); end
+		if c==4; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.1e-1 0 1e-2 0]; end
+		set(gca, 'layer', 'top', 'fontsize', 12, 'linewidth', 1, 'XTick', [], 'YTick', []); pbaspect([1 1.25 1]);
+	    colormap(f2(c+N),bwr);
+	axes(f3(c+N));
+		pcolor(T_in, Z_in, pred_ms_in-true_ms_in); shading flat;
 		caxis([-.10 .10]);
-% 		caxis(max(max(abs(caxis)))*[-1 1]);
-		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0]; cb.Ruler.TickLabelFormat = '%.2f';
-		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% 		if r==1; title('Mechanosensing error'); end
-		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-	colormap(bwr);
-	
-% 	% (Relative) errors for elastic fiber & mechanosensing (normalized wrt max insult)
-% 	axes(f4(c)); % axes(f4(2*(c-1)+1)); subplot(10,2,2*(r-1)+1);
-% 		pcolor(T_in, Z_in, (pred_ce_in-true_ce_in)/max(max(true_ce_in))); xlim([-pi pi]);
-% % 		if cs < 3; caxis([-.025 .025]); else; caxis([-.1 .1]); end
-% 		caxis([-.50 .50]);
-% % 		caxis(max(max(abs(caxis)))*[-1 1]);
-% 		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0]; cb.Ruler.TickLabelFormat = '%.2f';
-% 		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% % 		if r==1; title('Eln fiber error'); end
-% 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-% 	colormap(bwr);
-% 	axes(f5(c)); % axes(f4(2*c)); % subplot(10,2,2*r);
-% 		pcolor(T_in, Z_in, (pred_ms_in-true_ms_in)/max(max(true_ms_in))); xlim([-pi pi]);
-% % 		if cs < 3; caxis([-.025 .025]); else; caxis([-.1 .1]); end
-% 		caxis([-.50 .50]);
-% % 		caxis(max(max(abs(caxis)))*[-1 1]);
-% 		shading flat; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [3.2e-1 0 1.2e-2 0]; cb.Ruler.TickLabelFormat = '%.2f';
-% 		xticks(linspace(-pi,pi,3)); xticklabels({'-180','0','180'});
-% % 		if r==1; title('Mechanosensing error'); end
-% 		set(gca, 'layer', 'top', 'fontsize', 9, 'linewidth', 1); pbaspect([1 1.4 1]);
-% 	colormap(bwr);
-	
+		if c==4; cb = colorbar('linewidth', 1); cb.Position = cb.Position + [1.1e-1 0 1e-2 0]; end
+		set(gca, 'layer', 'top', 'fontsize', 12, 'linewidth', 1, 'XTick', [], 'YTick', []); pbaspect([1 1.25 1]);
+	    colormap(f3(c+N),bwr);
 	end
 	
 	c = c+1;
@@ -226,9 +222,7 @@ end
 %% Save plots
 if pcolsave
 	if ~exist('plots', 'dir'); mkdir('plots'); end
-	figure(1); print(gcf, ['plots/',casenum,'_',num2str(realizations),'_1-testing.png'], '-dpng', '-r300');
-	figure(2); print(gcf, ['plots/',casenum,'_',num2str(realizations),'_2-EF-pred.png'], '-dpng', '-r300');
-	figure(4); print(gcf, ['plots/',casenum,'_',num2str(realizations),'_3-EF-error.png'], '-dpng', '-r300');
-	figure(3); print(gcf, ['plots/',casenum,'_',num2str(realizations),'_4-MS-pred.png'], '-dpng', '-r300');
-	figure(5); print(gcf, ['plots/',casenum,'_',num2str(realizations),'_5-MS-error.png'], '-dpng', '-r300');
+	figure(1); set(gcf, 'color', 'w'); export_fig(['plots/',casenum,'_',num2str(realizations),'_1-testing.png'],  '-m3.5');
+	figure(2); set(gcf, 'color', 'w'); export_fig(['plots/',casenum,'_',num2str(realizations),'_2-EF-pred.png'],  '-m3.5');
+	figure(3); set(gcf, 'color', 'w'); export_fig(['plots/',casenum,'_',num2str(realizations),'_4-MS-pred.png'],  '-m3.5');
 end
