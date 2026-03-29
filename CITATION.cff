@@ -1,0 +1,91 @@
+cff-version: 1.2.0
+title: "Mixed-Insults-Aortic-Aneurysm"
+message: "If you use this software, please cite both the software and the associated publication."
+type: software
+
+authors:
+  - family-names: Li
+    given-names: David S.
+    affiliation: "Yale University"
+  - family-names: Goswami
+    given-names: Somdatta
+    affiliation: "Johns Hopkins University"
+  - family-names: Cao
+    given-names: Qianying
+    affiliation: "Brown University"
+  - family-names: Oommen
+    given-names: Vivek
+    affiliation: "Brown University"
+  - family-names:  Assi
+    given-names: Roland
+    affiliation: "Yale School of Medicine"
+  - family-names:  Humphrey
+    given-names: Jay D.
+    affiliation: "Yale University; Yale School of Medicine"
+  - family-names: Karniadakis
+    given-names: George Em
+    affiliation: "Brown University" 
+
+version: "1.0"
+date-released: 2026-03-28
+
+repository-code: "https://github.com/Centrum-IntelliPhysics/Mixed-Insults-Aortic-Aneurysm"
+
+license: MIT
+
+keywords:
+  - Aorta
+  - Neural networks
+  - Aneurysms
+  - Collagens
+  - Nerve fibers
+  - Biomechanics
+  - Fibers
+  - Simulation and modelling
+
+abstract: >-
+  Thoracic aortic aneurysms (TAAs) stem from diverse mechanical and mechanobiological disruptions to the aortic wall that 
+  can also increase the risk of dissection or rupture. There is increasing evidence that dysfunctions along the 
+  aortic mechanotransduction axis, including reduced integrity of elastic fibers and loss of cell-matrix connections, 
+  are particularly capable of causing thoracic aortopathy. Because different insults can produce distinct mechanical 
+  vulnerabilities, there is a pressing need to identify interacting factors that drive progression. In this work, we 
+  employ a finite element framework to generate synthetic TAAs arising from hundreds of heterogeneous insults that span 
+  a range of compromised elastic fiber integrity and cellular mechanosensing. From these simulations, we construct 
+  localized dilatation and distensibility maps throughout the aortic domain to serve as training data for neural network models 
+  to predict the initiating combined insult. Several candidate architectures (Deep Operator Networks, UNets, and Laplace Neural Operators) 
+  and input data formats are compared to establish a standard for handling future subject-specific information. 
+  We further quantify the predictive capability when networks are trained on geometric (dilatation) information alone, 
+  which mimics current clinical guidelines, versus training on both geometric and mechanical (distensibility) information. 
+  We show that prediction errors based on dilatation data are significantly higher than those based on dilatation and 
+  distensibility across all networks considered, highlighting the benefit of obtaining local distensibility measures in TAA assessment. 
+  Additionally, we identify UNet as the best-performing architecture across all training data formats.
+
+preferred-citation:
+  type: article
+  title: "Importance of localized dilatation and distensibility in identifying determinants of thoracic aortic aneurysm with neural operators"
+  authors:
+  - family-names: Li
+    given-names: David S.
+    affiliation: "Yale University"
+  - family-names: Goswami
+    given-names: Somdatta
+    affiliation: "Johns Hopkins University"
+  - family-names: Cao
+    given-names: Qianying
+    affiliation: "Brown University"
+  - family-names: Oommen
+    given-names: Vivek
+    affiliation: "Brown University"
+  - family-names:  Assi
+    given-names: Roland
+    affiliation: "Yale School of Medicine"
+  - family-names:  Humphrey
+    given-names: Jay D.
+    affiliation: "Yale University; Yale School of Medicine"
+  - family-names: Karniadakis
+    given-names: George Em
+    affiliation: "Brown University" 
+  journal: "PLOS Computational Biology"
+  year: 2025
+  doi: "10.1371/journal.pcbi.1013550"
+  url: "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1013550"
